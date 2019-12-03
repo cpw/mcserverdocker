@@ -1,3 +1,18 @@
+FROM openjdk:8-jdk-alpine as forgeinstall
+WORKDIR /tmp
+ARG FORGE_VERSION
+RUN cd /tmp \
+&& wget https://files.minecraftforge.net/maven/net/minecraftforge/forge/${FORGE_VERSION}/forge-${FORGE_VERSION}-installer.jar \
+&& java -jar forge-${FORGE_VERSION}-installer.jar --installServer /tmp/forge \
+&& cd /tmp/forge \
+&& ln -s forge-${FORGE_VERSION}.jar forge.jar
+
+FROM scratch as splinstall
+WORKDIR /tmp
+ARG SPL_VERSION
+ADD https://files.minecraftforge.net/maven/cpw/mods/forge/serverpacklocator/${SPL_VERSION}/serverpacklocator-${SPL_VERSION}.jar /tmp/serverpacklocator.jar
+
+
 FROM openjdk:8-jdk-alpine
 
 LABEL "author" "cpw"
@@ -38,18 +53,11 @@ ADD signcertificate.sh /srv/mcserver/forge/signcertificate.sh
 
 ARG FORGE_VERSION
 ARG SPL_VERSION
-
 ENV SPL_VERSION=${SPL_VERSION}
-LABEL "SPL" "${SPL_VERSION}"
-RUN cd /srv/mcserver/ \
-&& wget https://files.minecraftforge.net/maven/cpw/mods/forge/serverpacklocator/${SPL_VERSION}/serverpacklocator-${SPL_VERSION}.jar \
-&& cp /srv/mcserver/serverpacklocator-${SPL_VERSION}.jar /srv/mcserver/forge/serverpacklocator.jar
-
 ENV FORGE_VERSION=${FORGE_VERSION}
-LABEL "FORGE" "${FORGE_VERSION}"
-RUN cd /srv/mcserver/ \
-&& wget https://files.minecraftforge.net/maven/net/minecraftforge/forge/${FORGE_VERSION}/forge-${FORGE_VERSION}-installer.jar \
-&& java -jar forge-${FORGE_VERSION}-installer.jar --installServer /srv/mcserver/forge \
-&& ln -s /srv/mcserver/forge/forge-${FORGE_VERSION}.jar /srv/mcserver/forge/forge.jar
 
+LABEL "SPL" "${SPL_VERSION}"
+LABEL "FORGE" "${FORGE_VERSION}"
+COPY --chown=minecraft:minecraft --from=splinstall /tmp/serverpacklocator.jar /srv/mcserver/forge/
+COPY --chown=minecraft:minecraft --from=forgeinstall /tmp/forge/ /srv/mcserver/forge/
 ENTRYPOINT ["/srv/mcserver/forge/runserver.sh","nogui"]
