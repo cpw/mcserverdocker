@@ -18,6 +18,7 @@ FROM openjdk:8-jdk-alpine
 LABEL "author" "cpw"
 
 RUN apk add --no-cache -U \
+  tini \
   openssl \
   screen \
   util-linux \
@@ -60,4 +61,6 @@ LABEL "SPL" "${SPL_VERSION}"
 LABEL "FORGE" "${FORGE_VERSION}"
 COPY --chown=minecraft:minecraft --from=splinstall /tmp/serverpacklocator.jar /srv/mcserver/forge/
 COPY --chown=minecraft:minecraft --from=forgeinstall /tmp/forge/ /srv/mcserver/forge/
-ENTRYPOINT ["/srv/mcserver/forge/runserver.sh","nogui"]
+
+ENTRYPOINT ["/sbin/tini","--"]
+CMD ["/srv/mcserver/forge/runserver.sh","nogui"]
