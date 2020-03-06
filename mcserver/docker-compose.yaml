@@ -1,0 +1,18 @@
+version: '2.3'
+services: 
+    buildserver:
+        build:
+            context: .
+            args:
+                MC_VERSION: ${MC_VERSION}
+                FORGE_VERSION: ${FORGE_VERSION}
+                SPL_VERSION: ${SPL_VERSION}
+    version_tag:
+        extends: buildserver
+        image: mcserver:${FORGE_VERSION}
+    mclatest_tag:
+        extends: buildserver
+        image: mcserver:${MC_VERSION}_latest
+    latest_tag:
+        extends: buildserver
+        image: mcserver:latest
