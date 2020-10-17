@@ -19,7 +19,7 @@ FROM adoptopenjdk:14-jre-hotspot
 LABEL "author" "cpw"
 
 RUN apt-get update && \
-  apt-get -y install \
+  apt-get -y --no-install-recommends install \
     tini \
     nano \
     python3 \
