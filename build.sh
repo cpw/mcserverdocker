@@ -7,4 +7,5 @@ export MC_VERSION
 
 export SPL_VERSION=$(curl -s https://files.minecraftforge.net/maven/cpw/mods/forge/serverpacklocator/maven-metadata.xml | xmllint --xpath '/metadata/versioning/release/text()' -)
 
+echo "FORGE: ${FORGE_VERSION} SPL: ${SPL_VERSION}"
 docker-compose -f mcserver/docker-compose.yaml build --build-arg FORGE_VERSION --build-arg SPL_VERSION --build-arg MC_VERSION

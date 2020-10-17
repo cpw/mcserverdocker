@@ -14,24 +14,24 @@ ARG SPL_VERSION
 ADD https://files.minecraftforge.net/maven/cpw/mods/forge/serverpacklocator/${SPL_VERSION}/serverpacklocator-${SPL_VERSION}.jar /tmp/serverpacklocator.jar
 
 
-FROM openjdk:8-jdk-alpine
+FROM adoptopenjdk:14-jre-hotspot
 
 LABEL "author" "cpw"
 
-RUN apk add --no-cache -U \
-  tini \
-  openssl \
-  util-linux \
-  shadow \
-  nano \
-  python3 python3-dev py3-pip
+RUN apt-get update && \
+  apt-get -y install \
+    tini \
+    nano \
+    python3 \
+    python3-dev \
+    python3-pip
 
 RUN pip3 install mcstatus
 
 HEALTHCHECK CMD mcstatus localhost:25565 ping
 
-RUN addgroup -g 1000 minecraft \
-  && adduser -Ss /bin/false -u 1000 -G minecraft -h /srv/mcserver minecraft \
+RUN addgroup --gid 1000 minecraft \
+  && adduser --system --shell /bin/false --uid 1000 --gid 1000 --home /srv/mcserver minecraft \
   && mkdir -m 777 -p /srv/mcserver/base \
   && mkdir -m 777 -p /srv/mcserver/forge \
   && chown -R minecraft:minecraft /srv/mcserver
@@ -45,8 +45,8 @@ ENV GID=1000
 WORKDIR /srv/mcserver/base
 
 VOLUME ["/srv/mcserver/base"]
-ENV JVM_MEM_OPTS="-Xmx12G -Xms12G -XX:+UseG1GC -XX:+UnlockExperimentalVMOptions -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:G1HeapRegionSize=32M"
-ENV JVM_XX_OPTS="-Xloggc:/srv/mcserver/base/gc.log -verbose:gc -XX:+PrintGCDateStamps -Dfml.queryResult=confirm"
+ENV JVM_MEM_OPTS="-Xmx12G -Xms12G -XX:+UnlockExperimentalVMOptions -XX:+UseZGC"
+ENV JVM_XX_OPTS="-Xlog:gc:/srv/mcserver/base/gc.log"
 
 ADD runserver.sh /srv/mcserver/forge/runserver.sh
 ADD signcertificate.sh /srv/mcserver/forge/signcertificate.sh
@@ -61,5 +61,5 @@ LABEL "FORGE" "${FORGE_VERSION}"
 COPY --chown=minecraft:minecraft --from=splinstall /tmp/serverpacklocator.jar /srv/mcserver/forge/
 COPY --chown=minecraft:minecraft --from=forgeinstall /tmp/forge/ /srv/mcserver/forge/
 
-ENTRYPOINT ["/sbin/tini","--"]
+ENTRYPOINT ["/bin/tini","--"]
 CMD ["/srv/mcserver/forge/runserver.sh","nogui"]
