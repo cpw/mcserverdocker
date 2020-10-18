@@ -14,7 +14,7 @@ ARG SPL_VERSION
 ADD https://files.minecraftforge.net/maven/cpw/mods/forge/serverpacklocator/${SPL_VERSION}/serverpacklocator-${SPL_VERSION}.jar /tmp/serverpacklocator.jar
 
 
-FROM adoptopenjdk:14-jre-hotspot
+FROM adoptopenjdk:14-jdk-hotspot
 
 LABEL "author" "cpw"
 
@@ -46,7 +46,7 @@ WORKDIR /srv/mcserver/base
 
 VOLUME ["/srv/mcserver/base"]
 ENV JVM_MEM_OPTS="-Xmx12G -Xms12G -XX:+UnlockExperimentalVMOptions -XX:+UseZGC"
-ENV JVM_XX_OPTS="-Xlog:gc:/srv/mcserver/base/gc.log"
+ENV JVM_XX_OPTS="-Xlog:gc:/srv/mcserver/base/gc.log -XX:StartFlightRecording:settings=profile"
 
 ADD runserver.sh /srv/mcserver/forge/runserver.sh
 ADD signcertificate.sh /srv/mcserver/forge/signcertificate.sh
